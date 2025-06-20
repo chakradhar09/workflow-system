@@ -1,6 +1,6 @@
-import React from 'react';
-import Task from './Task';
-import { Typography, Grid, Paper, Divider } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import Task from './Task.jsx';
+import { Typography, Grid, Paper, Divider, CircularProgress } from '@mui/material';
 import { styled } from '@mui/system';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -9,46 +9,40 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 }));
 
 const User = () => {
-  // Mock task list for demonstration
-  const tasks = [
-    {
-      id: 1,
-      title: 'Design UI',
-      description: 'Design the user interface for the dashboard',
-      dueDate: '2024-01-31',
-      assignedTo: 'John Doe',
-      status: 'In Progress',
-      subtasks: [],
-      progress: 50,
-      estimatedTime: 40,
-    },
-    {
-      id: 2,
-      title: 'Develop API',
-      description: 'Develop the backend API for task management',
-      dueDate: '2024-02-15',
-      assignedTo: 'Jane Smith',
-      status: 'Completed',
-      subtasks: [],
-      progress: 100,
-      estimatedTime: 80,
-    },
-     {
-      id: 3,
-      title: 'Write Documentation',
-      description: 'Write user and developer documentation',
-      dueDate: '2024-02-20',
-      assignedTo: 'John Doe',
-      status: 'In Progress',
-      subtasks: [],
-      progress: 20,
-      estimatedTime: 30,
-    },
-  ];
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch('/api/tasks'); // Fetch tasks from backend
+        if (!response.ok) {
+          throw new Error(`Error: ${response.statusText}`);
+        }
+        const data = await response.json();
+        setTasks(data);
+        setLoading(false);
+      } catch (error) {
+        setError(error);
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, []); // Empty dependency array means this effect runs once on component mount
 
   // Filter tasks based on status
   const ongoingTasks = tasks.filter(task => task.status === 'In Progress' || task.status === 'Not Started');
   const completedTasks = tasks.filter(task => task.status === 'Completed');
+
+  if (loading) {
+    return <CircularProgress />;
+  }
+
+  if (error) {
+    return <Typography color="error">Error loading tasks: {error.message}</Typography>;
+  }
 
   return (
     <Grid container spacing={2}>
@@ -65,7 +59,7 @@ const User = () => {
           </Typography>
           <Grid container spacing={2}>
             {ongoingTasks.map((task) => (
-              <Grid item xs={12} sm={6} md={4} key={task.id}>
+              <Grid item xs={12} sm={6} md={4} key={task.id || task._id}> {/* Use task._id if backend uses MongoDB default */}
                 <Task task={task} />
               </Grid>
             ))}
@@ -81,7 +75,7 @@ const User = () => {
           </Typography>
           <Grid container spacing={2}>
             {completedTasks.map((task) => (
-              <Grid item xs={12} sm={6} md={4} key={task.id}>
+              <Grid item xs={12} sm={6} md={4} key={task.id || task._id}> {/* Use task._id if backend uses MongoDB default */}
                 <Task task={task} />
               </Grid>
             ))}

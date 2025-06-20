@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Task from './Task.jsx';
-import { TextField, Button, Select, MenuItem, FormControl, InputLabel, Typography, Grid, Paper, Slider } from '@mui/material';
+import { TextField, Button, Select, MenuItem, FormControl, InputLabel, Typography, Grid, Paper, Slider, CircularProgress, IconButton } from '@mui/material';
 import { styled } from '@mui/system';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -9,31 +10,7 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 }));
 
 const Admin = () => {
-  const [tasks, setTasks] = useState([
-    {
-      id: 1,
-      title: 'Design UI',
-      description: 'Design the user interface for the dashboard',
-      dueDate: '2024-01-31',
-      assignedTo: 'John Doe',
-      status: 'In Progress',
-      subtasks: [],
-      progress: 50,
-      estimatedTime: 40,
-    },
-    {
-      id: 2,
-      title: 'Develop API',
-      description: 'Develop the backend API for task management',
-      dueDate: '2024-02-15',
-      assignedTo: 'Jane Smith',
-      status: 'Not Started',
-      subtasks: [],
-      progress: 0,
-      estimatedTime: 80,
-    },
-  ]);
-
+  const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
@@ -42,6 +19,7 @@ const Admin = () => {
     status: 'Not Started',
     progress: 0,
     estimatedTime: 0,
+    subtasks: []
   });
   const [selectedTask, setSelectedTask] = useState(null);
   const [newSubtask, setNewSubtask] = useState({
@@ -53,6 +31,27 @@ const Admin = () => {
     progress: 0,
     estimatedTime: 0,
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchTasks = async () => {
+    try {
+      const response = await fetch('/api/tasks'); // Fetch tasks from backend
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setTasks(data);
+      setLoading(false);
+    } catch (error) {
+      setError(error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []); // Empty dependency array means this effect runs once on component mount
 
   const handleChange = (e) => {
     setNewTask({ ...newTask, [e.target.name]: e.target.value });
@@ -62,30 +61,23 @@ const Admin = () => {
     setNewSubtask({ ...newSubtask, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setTasks([...tasks, { ...newTask, id: tasks.length + 1, subtasks: [] }]);
-    setNewTask({
-      title: '',
-      description: '',
-      dueDate: '',
-      assignedTo: '',
-      status: 'Not Started',
-      progress: 0,
-      estimatedTime: 0,
-    });
-  };
-
-  const handleSubtaskSubmit = (e) => {
-    e.preventDefault();
-    if (selectedTask) {
-      const updatedTasks = tasks.map((task) =>
-        task.id === selectedTask.id
-          ? { ...task, subtasks: [...task.subtasks, { ...newSubtask, id: task.subtasks.length + 1 }] }
-          : task
-      );
-      setTasks(updatedTasks);
-      setNewSubtask({
+    try {
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newTask),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error: ${response.statusText} - ${errorText}`);
+      }
+      const savedTask = await response.json();
+      setTasks([...tasks, savedTask]); // Add the newly created task to the state
+      setNewTask({
         title: '',
         description: '',
         dueDate: '',
@@ -93,9 +85,126 @@ const Admin = () => {
         status: 'Not Started',
         progress: 0,
         estimatedTime: 0,
+        subtasks: []
       });
+    } catch (error) {
+      console.error('Error creating task:', error);
+      setError(`Error creating task: ${error.message}`);
     }
   };
+
+   const updateTask = async (taskId, updatedTaskData) => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedTaskData),
+      });
+      if (!response.ok) {
+         const errorText = await response.text();
+         throw new Error(`Error: ${response.statusText} - ${errorText}`);
+      }
+      const updatedTask = await response.json();
+      // Update the tasks state with the updated task
+      setTasks(tasks.map(task => task.id === updatedTask.id ? updatedTask : task));
+      setSelectedTask(updatedTask); // Update selected task state if it's the one being edited
+    } catch (error) {
+      console.error('Error updating task:', error);
+      setError(`Error updating task: ${error.message}`);
+    }
+  };
+
+  const deleteTask = async (taskId) => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+         const errorText = await response.text();
+         throw new Error(`Error: ${response.statusText} - ${errorText}`);
+      }
+      // Remove the deleted task from the state
+      setTasks(tasks.filter(task => task.id !== taskId));
+      setSelectedTask(null); // Deselect the task if it was deleted
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      setError(`Error deleting task: ${error.message}`);
+    }
+  };
+
+  const updateSubtask = async (taskId, subtaskId, updatedSubtaskData) => {
+    try {
+       // Find the task and update the specific subtask within its subtasks list
+       const taskToUpdate = tasks.find(task => task.id === taskId);
+       if (!taskToUpdate) return; // Should not happen if selectedTask is valid
+
+       const updatedSubtasks = taskToUpdate.subtasks.map(subtask =>
+         subtask.id === subtaskId ? { ...subtask, ...updatedSubtaskData } : subtask
+       );
+
+       const updatedTaskData = { ...taskToUpdate, subtasks: updatedSubtasks };
+
+      const response = await fetch(`/api/tasks/${taskId}/subtasks/${subtaskId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedSubtaskData),
+      });
+      if (!response.ok) {
+         const errorText = await response.text();
+         throw new Error(`Error: ${response.statusText} - ${errorText}`);
+      }
+       // Assuming the backend PUT subtask endpoint returns the updated task
+      const updatedTask = await response.json();
+
+      // Update the tasks state with the task containing the updated subtask
+      setTasks(tasks.map(task => task.id === updatedTask.id ? updatedTask : task));
+      setSelectedTask(updatedTask); // Update selected task state
+
+    } catch (error) {
+      console.error('Error updating subtask:', error);
+      setError(`Error updating subtask: ${error.message}`);
+    }
+  };
+
+   const deleteSubtask = async (taskId, subtaskId) => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}/subtasks/${subtaskId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+         const errorText = await response.text();
+         throw new Error(`Error: ${response.statusText} - ${errorText}`);
+      }
+
+      // Remove the deleted subtask from the state
+      setTasks(tasks.map(task =>
+        task.id === taskId
+          ? { ...task, subtasks: task.subtasks.filter(subtask => subtask.id !== subtaskId) }
+          : task
+      ));
+
+      // Update selected task state if a subtask within it was deleted
+      if (selectedTask && selectedTask.id === taskId) {
+         setSelectedTask({ ...selectedTask, subtasks: selectedTask.subtasks.filter(subtask => subtask.id !== subtaskId) });
+      }
+
+    } catch (error) {
+      console.error('Error deleting subtask:', error);
+      setError(`Error deleting subtask: ${error.message}`);
+    }
+  };
+
+  const handleSubtaskUpdate = (taskId, subtask) => {
+     // This function would be triggered when a subtask is edited
+     // For simplicity, we are not creating an edit form for subtasks right now.
+     // If you implement editing, you would call updateSubtask from here.
+     console.log(`Subtask ${subtask.id} of Task ${taskId} clicked for update/edit`);
+  };
+
 
   const handleTaskClick = (task) => {
     setSelectedTask(task);
@@ -103,23 +212,40 @@ const Admin = () => {
 
   const handleProgressChange = (e, newValue) => {
     if (selectedTask) {
+      // Optimistically update the UI
       const updatedTasks = tasks.map((task) =>
         task.id === selectedTask.id ? { ...task, progress: newValue } : task
       );
       setTasks(updatedTasks);
       setSelectedTask({ ...selectedTask, progress: newValue });
+
+      // Send PUT request to update the backend
+      updateTask(selectedTask.id, { ...selectedTask, progress: newValue });
     }
   };
 
   const handleEstimatedTimeChange = (e) => {
+    const newValue = e.target.value;
     if (selectedTask) {
+       // Optimistically update the UI
       const updatedTasks = tasks.map((task) =>
-        task.id === selectedTask.id ? { ...task, estimatedTime: e.target.value } : task
+        task.id === selectedTask.id ? { ...task, estimatedTime: newValue } : task
       );
       setTasks(updatedTasks);
-      setSelectedTask({ ...selectedTask, estimatedTime: e.target.value });
+      setSelectedTask({ ...selectedTask, estimatedTime: newValue });
+
+      // Send PUT request to update the backend
+      updateTask(selectedTask.id, { ...selectedTask, estimatedTime: newValue });
     }
   };
+
+  if (loading) {
+    return <CircularProgress />;
+  }
+
+  if (error) {
+    return <Typography color="error">Error: {error}</Typography>;
+  }
 
   return (
     <Grid container spacing={2}>
@@ -190,6 +316,16 @@ const Admin = () => {
                 <MenuItem value="Completed">Completed</MenuItem>
               </Select>
             </FormControl>
+             <FormControl fullWidth margin="normal">
+              <TextField
+                label="Estimated Time (hours)"
+                name="estimatedTime"
+                type="number"
+                value={newTask.estimatedTime}
+                onChange={handleChange}
+                required
+              />
+            </FormControl>
             <Button variant="contained" color="primary" type="submit">
               Add Task
             </Button>
@@ -202,7 +338,7 @@ const Admin = () => {
         </Typography>
         <Grid container spacing={2}>
           {tasks.map((task) => (
-            <Grid item xs={12} sm={6} md={4} key={task.id}>
+            <Grid item xs={12} sm={6} md={4} key={task.id || task._id}> {/* Use task._id if backend uses MongoDB default */}
               <Task task={task} onClick={() => handleTaskClick(task)}/>
             </Grid>
           ))}
@@ -211,7 +347,12 @@ const Admin = () => {
       {selectedTask && (
         <Grid item xs={12}>
           <StyledPaper>
-            <Typography variant="h6">Selected Task: {selectedTask.title}</Typography>
+             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+               <Typography variant="h6">Selected Task: {selectedTask.title}</Typography>
+               <IconButton onClick={() => deleteTask(selectedTask.id || selectedTask._id)} aria-label="delete">
+                 <DeleteIcon />
+               </IconButton>
+             </Box>
             <Typography variant="h5" component="h3">
               Subtask Allocation
             </Typography>
@@ -272,22 +413,48 @@ const Admin = () => {
                   <MenuItem value="Completed">Completed</MenuItem>
                 </Select>
               </FormControl>
+               <FormControl fullWidth margin="normal">
+                <TextField
+                  label="Estimated Time (hours)"
+                  name="estimatedTime"
+                  type="number"
+                  value={newSubtask.estimatedTime}
+                  onChange={handleSubtaskChange}
+                  required
+                />
+              </FormControl>
               <Button variant="contained" color="primary" type="submit">
                 Add Subtask
               </Button>
             </form>
-            <Typography variant="h6">Progress</Typography>
+            <Typography variant="h6" sx={{ mt: 2 }}>Progress: {selectedTask.progress}%</Typography>
             <Slider
               value={selectedTask.progress || 0}
               onChange={handleProgressChange}
               aria-labelledby="continuous-slider"
+               sx={{ mb: 2 }}
             />
-            <Typography variant="h6">Estimated Time (hours)</Typography>
-            <TextField
-              type="number"
-              value={selectedTask.estimatedTime || 0}
-              onChange={handleEstimatedTimeChange}
-            />
+            <Typography variant="h6">Estimated Time: {selectedTask.estimatedTime} hours</Typography>
+             {selectedTask.subtasks && selectedTask.subtasks.length > 0 && (
+               <Box sx={{ mt: 2 }}>
+                 <Typography variant="h6" component="h4">Subtasks:</Typography>
+                 <List>
+                   {selectedTask.subtasks.map(subtask => (
+                     <ListItem key={subtask.id || subtask._id} secondaryAction={
+                       <IconButton edge="end" aria-label="delete" onClick={() => deleteSubtask(selectedTask.id || selectedTask._id, subtask.id || subtask._id)}>
+                         <DeleteIcon />
+                       </IconButton>
+                     }>
+                       {/* For simplicity, subtasks are not editable directly here */}
+                       <ListItemText
+                         primary={subtask.title}
+                         secondary={`Status: ${subtask.status} | Progress: ${subtask.progress}% | Estimated: ${subtask.estimatedTime} hours | Assigned: ${subtask.assignedTo}`}
+                       />
+                     </ListItem>
+                   ))}
+                 </List>
+               </Box>
+             )}
           </StyledPaper>
         </Grid>
       )}
