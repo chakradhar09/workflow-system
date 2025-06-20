@@ -1,8 +1,8 @@
 import './App.css';
 import React, { createContext, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
-import Admin from './components/Admin';
-import User from './components/User';
+import Admin from './components/Admin.jsx';
+import User from './components/User.jsx';
 
 // Placeholder components for different sections and authentication
 const Dashboard = () => <h2>Dashboard Content</h2>;

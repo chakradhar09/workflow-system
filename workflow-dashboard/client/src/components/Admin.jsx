@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Task from './Task';
+import Task from './Task.jsx';
 import { TextField, Button, Select, MenuItem, FormControl, InputLabel, Typography, Grid, Paper, Slider } from '@mui/material';
 import { styled } from '@mui/system';
 
