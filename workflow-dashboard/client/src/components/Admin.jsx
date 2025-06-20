@@ -5,7 +5,7 @@ import {
   TextField, Button, Select, MenuItem, FormControl, InputLabel, 
   Typography, Grid, Paper, Slider, CircularProgress, IconButton, 
   Box, List, ListItem, ListItemText 
-} from '@mui/material';import { styled } from '@mui/system';
+} from '@mui/material';import { styled } from '@mui/material/styles';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
