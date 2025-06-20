@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Task from './Task.jsx';
-import { TextField, Button, Select, MenuItem, FormControl, InputLabel, Typography, Grid, Paper, Slider, CircularProgress, IconButton } from '@mui/material';
+import { 
+  TextField, Button, Select, MenuItem, FormControl, InputLabel, 
+  Typography, Grid, Paper, Slider, CircularProgress, IconButton, 
+  Box, List, ListItem, ListItemText 
+} from '@mui/material';
 import { styled } from '@mui/system';
 import DeleteIcon from '@mui/icons-material/Delete';
 
