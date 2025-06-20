@@ -31,6 +31,13 @@ import PersonIcon from '@mui/icons-material/Person';
 // Define drawer width
 const drawerWidth = 240;
 
+// Define StyledPaper here as it's used in the Dashboard component within this file
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(2),
+  marginBottom: theme.spacing(2),
+}));
+
+
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
     flexGrow: 1,
