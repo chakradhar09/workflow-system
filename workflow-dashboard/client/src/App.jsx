@@ -56,7 +56,10 @@ const AppBarStyled = styled(AppBar, {
   transition: theme.transitions.create(['margin', 'width'], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
-  }),
+  
+
+
+}),
   ...(open && {
     width: `calc(100% - ${drawerWidth}px)`,
     marginLeft: `${drawerWidth}px`,
@@ -77,30 +80,24 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 }));
 
 // Placeholder component for the Dashboard content
-const Dashboard = () => {
-  return (
-    <Box sx={{ flexGrow: 1, mt: 3 }}> {/* Add some top margin */}
-      <Typography variant="h4" gutterBottom>
-        Welcome to the Workflow Dashboard
-      </Typography>
-      <Grid container spacing={3}> {/* Use Grid for layout */}
-        <Grid item xs={12} md={6}> {/* Example grid items */}
-          <Paper sx={{ padding: 2 }}> {/* Use Paper for a card-like appearance */}
-            <Typography variant="h6">Task Summary</Typography>
-            <Typography>Total tasks: 10</Typography>
-            <Typography>Completed tasks: 5</Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ padding: 2 }}>
-            <Typography variant="h6">Recent Activity</Typography>
-            <Typography>User 'admin' created a new task.</Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Box>
-  );
-};
+const Dashboard = () => (
+  <Grid container spacing={2}>
+    <Grid item xs={12}>
+      <StyledPaper>
+        <Typography variant="h6">Dashboard Section 1</Typography>
+        {/* Add dashboard content here */}
+      </StyledPaper>
+    </Grid>
+    <Grid item xs={12}>
+       <StyledPaper>
+        <Typography variant="h6">Dashboard Section 2</Typography>
+        {/* Add more dashboard content here */}
+      </StyledPaper>
+    </Grid>
+  </Grid>
+);
+
+
 
 function App() {
   const [open, setOpen] = React.useState(true);
@@ -116,81 +113,84 @@ function App() {
   return (
     <Router>
       <AuthProvider> {/* Wrap with AuthProvider */}
-        <Box sx={{ display: 'flex' }}>
-          <CssBaseline />
-          <AppBarStyled position="fixed" open={open}>
-            <Toolbar>
-              {/* You might want to add a button here to toggle the drawer */}
-              <Typography variant="h6" noWrap component="div">
-                Workflow Dashboard
-              </Typography>
-            </Toolbar>
-          </AppBarStyled>
-          <Drawer
-            sx={{
-              width: drawerWidth,
-              flexShrink: 0,
-              '& .MuiDrawer-paper': {
+        {/* Added Fragment here */}
+        <React.Fragment>
+          <Box sx={{ display: 'flex' }}>
+            <CssBaseline />
+            <AppBarStyled position="fixed" open={open}>
+              <Toolbar>
+                {/* You might want to add a button here to toggle the drawer */}
+                <Typography variant="h6" noWrap component="div">
+                  Workflow Dashboard
+                </Typography>
+              </Toolbar>
+            </AppBarStyled>
+            <Drawer
+              sx={{
                 width: drawerWidth,
-                boxSizing: 'border-box',
-              },
-            }}
-            variant="persistent"
-            anchor="left"
-            open={open}
-          >
-            <DrawerHeader>
-               <Typography variant="h6" noWrap component="div">
-                Workflow
-
-              </Typography>
-            </DrawerHeader>
-            <Divider />
-            <List>
-              <ListItem disablePadding>
-                <ListItemButton component={Link} to="/">
-                  <ListItemIcon>
-                    <DashboardIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Dashboard" />
-                </ListItemButton>
-              </ListItem>
-              <ListItem disablePadding>
-                <ListItemButton component={Link} to="/admin">
-                  <ListItemIcon>
-                    <AdminPanelSettingsIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Admin Section" />
-                </ListItemButton>
-              </ListItem>
-               <ListItem disablePadding>
-                <ListItemButton component={Link} to="/user">
-                  <ListItemIcon>
-                    <PersonIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="User Section" />
-                </ListItemButton>
-              </ListItem>
-            </List>
-            {/* You can add more sections or a second divider here */}
-          </Drawer>
-          <Main open={open}>
-            <DrawerHeader /> {/* This is to push the content below the AppBar */}
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              {/* Protect the /admin route */}
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute requiredRole="admin">
-                    <Admin />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/user" element={<User />} />
-            </Routes>
-          </Main>
-        </Box>
+                flexShrink: 0,
+                '& .MuiDrawer-paper': {
+                  width: drawerWidth,
+                  boxSizing: 'border-box',
+                },
+              }}
+              variant="persistent"
+              anchor="left"
+              open={open}
+            >
+              <DrawerHeader>
+                {/* Close button or logo could go here */}
+                 <Typography variant="h6" noWrap component="div">
+                  Navigation
+                </Typography>
+              </DrawerHeader>
+              <Divider />
+              <List>
+                <ListItem disablePadding>
+                  <ListItemButton component={Link} to="/">
+                    <ListItemIcon>
+                      <DashboardIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Dashboard" />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemButton component={Link} to="/admin">
+                    <ListItemIcon>
+                      <AdminPanelSettingsIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Admin Section" />
+                  </ListItemButton>
+                </ListItem>
+                 <ListItem disablePadding>
+                  <ListItemButton component={Link} to="/user">
+                    <ListItemIcon>
+                      <PersonIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="User Section" />
+                  </ListItemButton>
+                </ListItem>
+              </List>
+              {/* You can add more sections or a second divider here */}
+            </Drawer>
+            <Main open={open}>
+              <DrawerHeader /> {/* This is to push the content below the AppBar */}
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                {/* Protect the /admin route */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <Admin />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/user" element={<User />} />
+              </Routes>
+            </Main>
+          </Box>
+        </React.Fragment>
       </AuthProvider>
     </Router>
   );
