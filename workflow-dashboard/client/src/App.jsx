@@ -1,27 +1,181 @@
-import './App.css';
+import './App.css'; // Keep custom styles if any, or integrate MUI styling
 import React, { createContext, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import Admin from './components/Admin.jsx';
 import User from './components/User.jsx';
 
-// Placeholder components for different sections and authentication
-const Dashboard = () => <h2>Dashboard Content</h2>;
+// Import Material-UI components
+import { styled } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import Drawer from '@mui/material/Drawer';
+import CssBaseline from '@mui/material/CssBaseline';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import List from '@mui/material/List';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Paper from '@mui/material/Paper'; // Import Paper
+import Grid from '@mui/material/Grid'; // Import Grid
 
+// Import Material-UI Icons (you might need to install @mui/icons-material)
+// npm install @mui/icons-material
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import PersonIcon from '@mui/icons-material/Person';
+
+
+// Define drawer width
+const drawerWidth = 240;
+
+const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
+  ({ theme, open }) => ({
+    flexGrow: 1,
+    padding: theme.spacing(3),
+    transition: theme.transitions.create('margin', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
+    marginLeft: `-${drawerWidth}px`,
+    ...(open && {
+      transition: theme.transitions.create('margin', {
+        easing: theme.transitions.easing.easeOut,
+        duration: theme.transitions.duration.enteringScreen,
+      }),
+      marginLeft: 0,
+    }),
+  }),
+);
+
+const AppBarStyled = styled(AppBar, {
+  shouldForwardProp: (prop) => prop !== 'open',
+})(({ theme, open }) => ({
+  transition: theme.transitions.create(['margin', 'width'], {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  ...(open && {
+    width: `calc(100% - ${drawerWidth}px)`,
+    marginLeft: `${drawerWidth}px`,
+    transition: theme.transitions.create(['margin', 'width'], {
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  }),
+}));
+
+const DrawerHeader = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  padding: theme.spacing(0, 1),
+  //
+  ...theme.mixins.toolbar,
+  justifyContent: 'flex-end',
+}));
+
+// Placeholder component for the Dashboard content
+const Dashboard = () => {
+  return (
+    <Box sx={{ flexGrow: 1, mt: 3 }}> {/* Add some top margin */}
+      <Typography variant="h4" gutterBottom>
+        Welcome to the Workflow Dashboard
+      </Typography>
+      <Grid container spacing={3}> {/* Use Grid for layout */}
+        <Grid item xs={12} md={6}> {/* Example grid items */}
+          <Paper sx={{ padding: 2 }}> {/* Use Paper for a card-like appearance */}
+            <Typography variant="h6">Task Summary</Typography>
+            <Typography>Total tasks: 10</Typography>
+            <Typography>Completed tasks: 5</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ padding: 2 }}>
+            <Typography variant="h6">Recent Activity</Typography>
+            <Typography>User 'admin' created a new task.</Typography>
+          </Paper>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
 
 function App() {
+  const [open, setOpen] = React.useState(true);
+
+  const handleDrawerOpen = () => {
+    setOpen(true);
+  };
+
+  const handleDrawerClose = () => {
+    setOpen(false);
+  };
+
   return (
     <Router>
       <AuthProvider> {/* Wrap with AuthProvider */}
-        <div className="app-container">
-          <div className="sidebar">
-            <h2>Navigation</h2>
-            <ul>
-              <li><Link to="/">Dashboard</Link></li>
-              <li><Link to="/admin">Admin Section</Link></li>
-              <li><Link to="/user">User Section</Link></li>
-            </ul>
-          </div>
-          <div className="content">
+        <Box sx={{ display: 'flex' }}>
+          <CssBaseline />
+          <AppBarStyled position="fixed" open={open}>
+            <Toolbar>
+              {/* You might want to add a button here to toggle the drawer */}
+              <Typography variant="h6" noWrap component="div">
+                Workflow Dashboard
+              </Typography>
+            </Toolbar>
+          </AppBarStyled>
+          <Drawer
+            sx={{
+              width: drawerWidth,
+              flexShrink: 0,
+              '& .MuiDrawer-paper': {
+                width: drawerWidth,
+                boxSizing: 'border-box',
+              },
+            }}
+            variant="persistent"
+            anchor="left"
+            open={open}
+          >
+            <DrawerHeader>
+               <Typography variant="h6" noWrap component="div">
+                Workflow
+
+              </Typography>
+            </DrawerHeader>
+            <Divider />
+            <List>
+              <ListItem disablePadding>
+                <ListItemButton component={Link} to="/">
+                  <ListItemIcon>
+                    <DashboardIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Dashboard" />
+                </ListItemButton>
+              </ListItem>
+              <ListItem disablePadding>
+                <ListItemButton component={Link} to="/admin">
+                  <ListItemIcon>
+                    <AdminPanelSettingsIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Admin Section" />
+                </ListItemButton>
+              </ListItem>
+               <ListItem disablePadding>
+                <ListItemButton component={Link} to="/user">
+                  <ListItemIcon>
+                    <PersonIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="User Section" />
+                </ListItemButton>
+              </ListItem>
+            </List>
+            {/* You can add more sections or a second divider here */}
+          </Drawer>
+          <Main open={open}>
+            <DrawerHeader /> {/* This is to push the content below the AppBar */}
             <Routes>
               <Route path="/" element={<Dashboard />} />
               {/* Protect the /admin route */}
@@ -35,8 +189,8 @@ function App() {
               />
               <Route path="/user" element={<User />} />
             </Routes>
-          </div>
-        </div>
+          </Main>
+        </Box>
       </AuthProvider>
     </Router>
   );
