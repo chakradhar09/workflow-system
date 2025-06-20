@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Task from './Task.jsx';
+
 import { 
   TextField, Button, Select, MenuItem, FormControl, InputLabel, 
   Typography, Grid, Paper, Slider, CircularProgress, IconButton, 
   Box, List, ListItem, ListItemText 
-} from '@mui/material';
-import { styled } from '@mui/system';
+} from '@mui/material';import { styled } from '@mui/system';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -63,6 +63,41 @@ const Admin = () => {
 
   const handleSubtaskChange = (e) => {
     setNewSubtask({ ...newSubtask, [e.target.name]: e.target.value });
+  };
+
+    const handleSubtaskSubmit = async (e) => {
+    e.preventDefault();
+    if (selectedTask) {
+      try {
+        const response = await fetch(`/api/tasks/${selectedTask.id}/subtasks`, { // Send new subtask to backend
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newSubtask),
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Error: ${response.statusText} - ${errorText}`);
+        }
+        const updatedTask = await response.json();
+        // Update the tasks state with the task containing the new subtask
+        setTasks(tasks.map(task => task.id === updatedTask.id ? updatedTask : task));
+        setSelectedTask(updatedTask); // Update selected task to show the new subtask
+        setNewSubtask({
+          title: '',
+          description: '',
+          dueDate: '',
+          assignedTo: '',
+          status: 'Not Started',
+          progress: 0,
+          estimatedTime: 0,
+        });
+      } catch (error) {
+         console.error('Error creating subtask:', error);
+         // Optionally, show an error message to the user
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
