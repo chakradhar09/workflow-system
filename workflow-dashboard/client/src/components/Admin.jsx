@@ -134,15 +134,6 @@ const Admin = () => {
 
    const updateTask = async (taskId, updatedTaskData) => {
     try {
-       const taskToUpdate = tasks.find(task => task.id === taskId);
-       if (!taskToUpdate) return;
-
-       const updatedSubtasks = taskToUpdate.subtasks.map(subtask =>
-         subtask.id === subtaskId ? { ...subtask, ...updatedSubtaskData } : subtask
-       );
-
-       const updatedTaskData = { ...taskToUpdate, subtasks: updatedSubtasks };
-
       const response = await fetch(`/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: {
@@ -155,8 +146,9 @@ const Admin = () => {
          throw new Error(`Error: ${response.statusText} - ${errorText}`);
       }
       const updatedTask = await response.json();
+      // Update the tasks state with the updated task
       setTasks(tasks.map(task => task.id === updatedTask.id ? updatedTask : task));
-      setSelectedTask(updatedTask);
+      setSelectedTask(updatedTask); // Update selected task state if it's the one being edited
     } catch (error) {
       console.error('Error updating task:', error);
       setError(`Error updating task: ${error.message}`); // Display specific error message
@@ -213,34 +205,6 @@ const Admin = () => {
     } catch (error) {
       console.error('Error updating subtask:', error);
       setError(`Error updating subtask: ${error.message}`); // Display specific error message
-    }
-  };
-
-   const deleteSubtask = async (taskId, subtaskId) => {
-    try {
-      const response = await fetch(`/api/tasks/${taskId}/subtasks/${subtaskId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-         const errorText = await response.text();
-         throw new Error(`Error: ${response.statusText} - ${errorText}`);
-      }
-
-      // Remove the deleted subtask from the state
-      setTasks(tasks.map(task =>
-        task.id === taskId
-          ? { ...task, subtasks: task.subtasks.filter(subtask => subtask.id !== subtaskId) }
-          : task
-      ));
-
-      // Update selected task state if a subtask within it was deleted
-      if (selectedTask && selectedTask.id === taskId) {
-         setSelectedTask({ ...selectedTask, subtasks: selectedTask.subtasks.filter(subtask => subtask.id !== subtaskId) });
-      }
-
-    } catch (error) {
-      console.error('Error deleting subtask:', error);
-      setError(`Error deleting subtask: ${error.message}`); // Display specific error message
     }
   };
 
@@ -362,110 +326,13 @@ const Admin = () => {
                 <MenuItem value="Completed">Completed</MenuItem>
               </Select>
             </FormControl>
-             <FormControl fullWidth margin="normal">
-              <TextField
-                label="Estimated Time (hours)"
-                name="estimatedTime"
-                type="number"
-                value={newTask.estimatedTime}
-                onChange={handleChange}
-                required
-              />
-            </FormControl>
-            <Button variant="contained" color="primary" type="submit">
-              Add Task
-            </Button>
-          </form>
-        </StyledPaper>
-      </Grid>
-      <Grid item xs={12}>
-        <Typography variant="h5" component="h3">
-          Task List
-        </Typography>
-        <Grid container spacing={2}>
-          {tasks.map((task) => (
-            <Grid item xs={12} sm={6} md={4} key={task.id || task._id}> {/* Use task._id if backend uses MongoDB default */}
-              <Task task={task} onClick={() => handleTaskClick(task)}/>
-            </Grid>
-          ))}
-        </Grid>
-      </Grid>
-      {selectedTask && (
-        <Grid item xs={12}>
-          <StyledPaper>
-             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-               <Typography variant="h6">Selected Task: {selectedTask.title}</Typography>
-               <IconButton onClick={() => deleteTask(selectedTask.id || selectedTask._id)} aria-label="delete">
-                 <DeleteIcon />
-               </IconButton>
-             </Box>
-            <Typography variant="h5" component="h3">
-              Subtask Allocation
-            </Typography>
-            <form onSubmit={handleSubtaskSubmit}>
-              <FormControl fullWidth margin="normal">
-                <TextField
-                  label="Title"
-                  name="title"
-                  value={newSubtask.title}
-                  onChange={handleSubtaskChange}
-                  required
-                />
-              </FormControl>
-              <FormControl fullWidth margin="normal">
-                <TextField
-                  label="Description"
-                  name="description"
-                  value={newSubtask.description}
-                  onChange={handleSubtaskChange}
-                  multiline
-                  rows={4}
-                  required
-                />
-              </FormControl>
-              <FormControl fullWidth margin="normal">
-                <TextField
-                  label="Due Date"
-                  name="dueDate"
-                  type="date"
-                  value={newSubtask.dueDate}
-                  onChange={handleSubtaskChange}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  required
-                />
-              </FormControl>
-              <FormControl fullWidth margin="normal">
-                <TextField
-                  label="Assigned To"
-                  name="assignedTo"
-                  value={newSubtask.assignedTo}
-                  onChange={handleSubtaskChange}
-                  required
-                />
-              </FormControl>
-              <FormControl fullWidth margin="normal">
-                <InputLabel id="status-label">Status</InputLabel>
-                <Select
-                  labelId="status-label"
-                  name="status"
-                  value={newSubtask.status}
-                  onChange={handleSubtaskChange}
-                  required
-                >
-                  <MenuItem value="Not Started">Not Started</MenuItem>
-                  <MenuItem value="In Progress">In Progress</MenuItem>
-                  <MenuItem value="Completed">Completed</MenuItem>
-                </Select>
-              </FormControl>
                <FormControl fullWidth margin="normal">
                 <TextField
                   label="Estimated Time (hours)"
                   name="estimatedTime"
                   type="number"
-                  value={newSubtask.estimatedTime}
-                  onChange={handleSubtaskChange}
+                  value={newTask.estimatedTime}
+                  onChange={handleChange}
                   required
                 />
               </FormControl>
