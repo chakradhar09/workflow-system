@@ -69,7 +69,7 @@ const Admin = () => {
     e.preventDefault();
     if (selectedTask) {
       try {
-        const response = await fetch(`/api/tasks/${selectedTask.id}/subtasks`, { // Send new subtask to backend
+        const response = await fetch(`/api/tasks/${selectedTask.id}/subtasks`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -81,9 +81,8 @@ const Admin = () => {
           throw new Error(`Error: ${response.statusText} - ${errorText}`);
         }
         const updatedTask = await response.json();
-        // Update the tasks state with the task containing the new subtask
         setTasks(tasks.map(task => task.id === updatedTask.id ? updatedTask : task));
-        setSelectedTask(updatedTask); // Update selected task to show the new subtask
+        setSelectedTask(updatedTask);
         setNewSubtask({
           title: '',
           description: '',
@@ -96,6 +95,7 @@ const Admin = () => {
       } catch (error) {
          console.error('Error creating subtask:', error);
          // Optionally, show an error message to the user
+         setError(`Error creating subtask: ${error.message}`); // Display specific error message
       }
     }
   };
@@ -115,7 +115,7 @@ const Admin = () => {
         throw new Error(`Error: ${response.statusText} - ${errorText}`);
       }
       const savedTask = await response.json();
-      setTasks([...tasks, savedTask]); // Add the newly created task to the state
+      setTasks([...tasks, savedTask]);
       setNewTask({
         title: '',
         description: '',
@@ -128,12 +128,21 @@ const Admin = () => {
       });
     } catch (error) {
       console.error('Error creating task:', error);
-      setError(`Error creating task: ${error.message}`);
+      setError(`Error creating task: ${error.message}`); // Display specific error message
     }
   };
 
    const updateTask = async (taskId, updatedTaskData) => {
     try {
+       const taskToUpdate = tasks.find(task => task.id === taskId);
+       if (!taskToUpdate) return;
+
+       const updatedSubtasks = taskToUpdate.subtasks.map(subtask =>
+         subtask.id === subtaskId ? { ...subtask, ...updatedSubtaskData } : subtask
+       );
+
+       const updatedTaskData = { ...taskToUpdate, subtasks: updatedSubtasks };
+
       const response = await fetch(`/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: {
@@ -146,12 +155,11 @@ const Admin = () => {
          throw new Error(`Error: ${response.statusText} - ${errorText}`);
       }
       const updatedTask = await response.json();
-      // Update the tasks state with the updated task
       setTasks(tasks.map(task => task.id === updatedTask.id ? updatedTask : task));
-      setSelectedTask(updatedTask); // Update selected task state if it's the one being edited
+      setSelectedTask(updatedTask);
     } catch (error) {
       console.error('Error updating task:', error);
-      setError(`Error updating task: ${error.message}`);
+      setError(`Error updating task: ${error.message}`); // Display specific error message
     }
   };
 
@@ -164,12 +172,11 @@ const Admin = () => {
          const errorText = await response.text();
          throw new Error(`Error: ${response.statusText} - ${errorText}`);
       }
-      // Remove the deleted task from the state
       setTasks(tasks.filter(task => task.id !== taskId));
-      setSelectedTask(null); // Deselect the task if it was deleted
+      setSelectedTask(null);
     } catch (error) {
       console.error('Error deleting task:', error);
-      setError(`Error deleting task: ${error.message}`);
+      setError(`Error deleting task: ${error.message}`); // Display specific error message
     }
   };
 
@@ -205,7 +212,7 @@ const Admin = () => {
 
     } catch (error) {
       console.error('Error updating subtask:', error);
-      setError(`Error updating subtask: ${error.message}`);
+      setError(`Error updating subtask: ${error.message}`); // Display specific error message
     }
   };
 
@@ -233,7 +240,7 @@ const Admin = () => {
 
     } catch (error) {
       console.error('Error deleting subtask:', error);
-      setError(`Error deleting subtask: ${error.message}`);
+      setError(`Error deleting subtask: ${error.message}`); // Display specific error message
     }
   };
 
@@ -283,7 +290,7 @@ const Admin = () => {
   }
 
   if (error) {
-    return <Typography color="error">Error: {error}</Typography>;
+    return <Typography color="error">Error: {error.message}</Typography>; // Render error.message
   }
 
   return (
