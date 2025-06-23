@@ -77,8 +77,15 @@ const Admin = () => {
           body: JSON.stringify(newSubtask),
         });
         if (!response.ok) {
+          const constType = response.headers.get('content-type');
+        if (constType && constType.includes('application/json')){
+          const errorData = await response.json();
+          throw new Error(`Error: ${response.statusText} - ${errorData.message || JSON.Steringlst}`);
+        } 
+        else{
           const errorText = await response.text();
           throw new Error(`Error: ${response.statusText} - ${errorText}`);
+        }
         }
         const updatedTask = await response.json();
         setTasks(tasks.map(task => task.id === updatedTask.id ? updatedTask : task));
@@ -111,8 +118,15 @@ const Admin = () => {
         body: JSON.stringify(newTask),
       });
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Error: ${response.statusText} - ${errorText}`);
+        const constType = response.header.get('content-type');
+        if (constType && constType.includes('application/json')){
+          const errorData = await response.json();
+          throw new Error(`Error: ${response.statusText} - ${errorData.message || JSON.stringify(errorData)}`);
+        } 
+        else{
+          const errorText = await response.text();
+          throw new Error(`Error: ${response.statusText} - ${errorText}`);
+        }
       }
       const savedTask = await response.json();
       setTasks([...tasks, savedTask]);
@@ -142,8 +156,15 @@ const Admin = () => {
         body: JSON.stringify(updatedTaskData),
       });
       if (!response.ok) {
-         const errorText = await response.text();
-         throw new Error(`Error: ${response.statusText} - ${errorText}`);
+        const constType = response.header.get('content-type');
+        if (constType && constType.includes('application/json')){
+          const errorData = await response.json();
+          throw new Error(`Error: ${response.statusText} - ${errorData.message || JSON.stringify(errorData)}`);
+        }         
+        else{
+          const errorText = await response.text();
+          throw new Error(`Error: ${response.statusText} - ${errorText}`);
+        }
       }
       const updatedTask = await response.json();
       // Update the tasks state with the updated task
@@ -161,8 +182,15 @@ const Admin = () => {
         method: 'DELETE',
       });
       if (!response.ok) {
-         const errorText = await response.text();
-         throw new Error(`Error: ${response.statusText} - ${errorText}`);
+        const constType = response.header.get('content-type');
+        if (constType && constType.includes('application/json')){
+          const errorData = await response.json();
+          throw new Error(`Error: ${response.statusText} - ${errorData.message || JSON.stringify(errorData)}`);
+        }         
+        else{
+          const errorText = await response.text();
+          throw new Error(`Error: ${response.statusText} - ${errorText}`);
+        }
       }
       setTasks(tasks.filter(task => task.id !== taskId));
       setSelectedTask(null);
@@ -192,8 +220,11 @@ const Admin = () => {
         body: JSON.stringify(updatedSubtaskData),
       });
       if (!response.ok) {
-         const errorText = await response.text();
-         throw new Error(`Error: ${response.statusText} - ${errorText}`);
+        const constType = response.header.get('content-type');
+        if (constType && constType.includes('application/json')){
+          const errorData = await response.json();
+          throw new Error('Error: ${resoponse.statusText} - ${errorData.message || JSON.stringify(errorData)}')
+        }
       }
        // Assuming the backend PUT subtask endpoint returns the updated task
       const updatedTask = await response.json();
@@ -205,6 +236,34 @@ const Admin = () => {
     } catch (error) {
       console.error('Error updating subtask:', error);
       setError(`Error updating subtask: ${error.message}`); // Display specific error message
+    }
+  };
+
+   const deleteSubtask = async (taskId, subtaskId) => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}/subtasks/${subtaskId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+         const errorText = await response.text();
+         throw new Error(`Error: ${response.statusText} - ${errorText}`);
+      }
+
+      // Remove the deleted subtask from the state
+      setTasks(tasks.map(task =>
+        task.id === taskId
+          ? { ...task, subtasks: task.subtasks.filter(subtask => subtask.id !== subtaskId) }
+          : task
+      ));
+
+      // Update selected task state if a subtask within it was deleted
+      if (selectedTask && selectedTask.id === taskId) {
+         setSelectedTask({ ...selectedTask, subtasks: selectedTask.subtasks.filter(subtask => subtask.id !== subtaskId) });
+      }
+
+    } catch (error) {
+      console.error('Error deleting subtask:', error);
+      setError(`Error deleting subtask: ${error.message}`); // Display specific error message
     }
   };
 
